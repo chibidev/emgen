@@ -1,0 +1,3 @@
+[dependencies/cppast]
+url = https://github.com/chibidev/cppast.git
+ref = master
