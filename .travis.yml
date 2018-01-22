@@ -7,10 +7,15 @@ matrix:
           compiler: clang
 
 install:
+    - cd ..
+    - git clone https://github.com/chibidev/git-dependencies.git
+    - export PATH=$PATH:`pwd`/git-dependencies
     - brew install llvm
     - export LLVM_CONFIG=`find /usr/local/Cellar -name llvm-config`
+    - cd emgen
 
 script:
     - mkdir build && cd build
+    - git-dependencies update -r
     - $CMAKE -DLLVM_CONFIG_BINARY=$LLVM_CONFIG ..
     - $CMAKE --build .
