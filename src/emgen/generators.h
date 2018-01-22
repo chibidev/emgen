@@ -35,7 +35,7 @@ namespace emgen {
     }
 
     template<typename CppRange>
-    decltype(auto) generate_classes(CppRange&& range, const std::string& prefix = {}) {
+    decltype(auto) generate_classes(CppRange&& range, const std::string& smart_pointer_type, const std::string& prefix = {}) {
         auto&& classes = cppast::classes(range);
         auto&& exported_classes = emgen::exported(classes);
 
@@ -43,7 +43,7 @@ namespace emgen {
             auto&& class_name = cl.name();
 
             generate_enums(cl, prefix + class_name + "::");
-            generate_classes(cl, prefix + class_name + "::");
+            generate_classes(cl, smart_pointer_type, prefix + class_name + "::");
 
             auto&& bases = emgen::typenames(linq::query(cl.bases()));
 
@@ -90,7 +90,10 @@ namespace emgen {
                 if (is_polymorphic)
                     std::cout << "    .allow_subclass<" << wrapper_name << ">(\"" << wrapper_name << "\")" << std::endl;
 
-                std::cout << "    .smart_ptr<std::shared_ptr<" << prefix << class_name << ">>()" << std::endl;
+
+                bool generate_smart_pointer = !smart_pointer_type.empty();
+                if (generate_smart_pointer)
+                    std::cout << "    .smart_ptr<" << smart_pointer_type << "<" << prefix << class_name << ">>()" << std::endl;
             }
 
             {

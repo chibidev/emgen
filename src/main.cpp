@@ -31,6 +31,7 @@ int main(int argc, char* argv[]) {
     ;
     options.add_options("compilation")
         ("d,dbpath", "set the directory where a 'compile_commands.json' file is located containing build information. Defaults to current directory.", cxxopts::value<std::string>()->default_value("."s))
+        ("s,smart-pointer", "generate smart pointer with the given templated class", cxxopts::value<std::string>()->default_value(std::string{}))
     ;
 
     options.positional_help("file");
@@ -67,7 +68,7 @@ int main(int argc, char* argv[]) {
     std::cout << "EMSCRIPTEN_BINDINGS(Generated) {" << std::endl;
 
     emgen::generate_enums(*file);
-    emgen::generate_classes(*file);
+    emgen::generate_classes(*file, options["smart-pointer"].as<std::string>());
 
     std::cout << "}" << std::endl;
 
