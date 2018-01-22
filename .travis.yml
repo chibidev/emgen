@@ -1,0 +1,16 @@
+language: cpp
+
+matrix:
+    include:
+        - os: osx
+          osx_image: xcode9.2
+          compiler: clang
+
+install:
+    - brew install llvm
+    - export LLVM_CONFIG=`find /usr/local/Cellar -name llvm-config`
+
+script:
+    - mkdir build && cd build
+    - $CMAKE -DLLVM_CONFIG_BINARY=$LLVM_CONFIG ..
+    - $CMAKE --build .
