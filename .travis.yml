@@ -15,7 +15,7 @@ install:
     - export LLVM_CONFIG=`find /usr/local/Cellar -name llvm-config`
 
 script:
-    - mkdir build && cd build
     - git-dependencies update -r
+    - mkdir build && cd build
     - cmake -DLLVM_CONFIG_BINARY=$LLVM_CONFIG ..
     - cmake --build .
