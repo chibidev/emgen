@@ -14,7 +14,16 @@ set(CXX_FLAGS "-Wall -Wextra -Weffc++")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${CXX_FLAGS}")
 
-add_executable(emgen src/main.cpp)
+add_executable(emgen
+    src/cppast/extensions.h
+    src/emgen/generators.h
+    src/emgen/helpers.h
+    src/linq.h
+    src/main.cpp
+    src/ranges.h
+    src/utilities/functional.h
+    src/utilities/string.h
+)
 target_include_directories(emgen PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_compile_options(emgen PRIVATE -std=c++14)
 target_link_libraries(emgen PRIVATE cppast cxxopts)
