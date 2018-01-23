@@ -2,8 +2,8 @@ language: cpp
 matrix:
     include:
         - os: osx
-            osx_image: xcode9.2
-            compiler: clang
+          osx_image: xcode9.2
+          compiler: clang
 
 install:
     - cd ..
