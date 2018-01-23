@@ -1,10 +1,9 @@
 language: cpp
-
 matrix:
     include:
         - os: osx
-          osx_image: xcode9.2
-          compiler: clang
+            osx_image: xcode9.2
+            compiler: clang
 
 install:
     - cd ..
@@ -17,5 +16,14 @@ install:
 script:
     - git-dependencies update -r
     - mkdir build && cd build
-    - cmake -DLLVM_CONFIG_BINARY=$LLVM_CONFIG ..
-    - cmake --build .
+    - cmake -D LLVM_VERSION_EXPLICIT=`clang -v 2>&1 | grep version | cut -d ' ' -f 4` -D LIBCLANG_INCLUDE_DIR=`$LLVM_CONFIG --includedir` -D LIBCLANG_LIBRARY=/Applications/Xcode.app/Contents/Frameworks/libclang.dylib -D CLANG_BINARY=/usr/bin/clang -D LIBCLANG_SYSTEM_INCLUDE_DIR=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk -D CMAKE_BUILD_TYPE=Release ..
+    - cmake --build . --target emgen
+
+deploy:
+    provider: releases
+    api_key:
+        secure: biPSBrhjo3KES7BU9HcHm0sXc74nCoqhKR7eixNIrXdKaRr6GJHZxBd405KHVIgNKoAFbtOOsZpfU+vpnMdGa2wZIlaRdwioYdl9yUMITlWaOsdsMxmc/xV9iQaNlCIiOekxni7L6CXlKGgF6Hbg5rNPZviqhbDHxG1smCLYaXVR2mKJkYq/Scj17adn8h5GoLJQ+Vog0lrqvrUWUFt5fKwXan8iep4RoakIWnuxSZOmD1wfOCNN7v/4BsL4n6sk2rkOPtaULibzAirwOQL0kVJLFpnMiAyuHqs5f987JEHWyuEVR+H19g+3ZRuKa+fSMcsJA0wy50vesYrfQKTbHfEBnHVMXilbWxI6/g+hw6sMx0shUKpSIfbG2cqM/ussIeu/FlbTYz1P558bXPrucpehBRw2FSX1yLmS1T0dWxbI5IqVb7EBQxrQ5MpO0jKh5PNSQoev8NWjg1hxR7HweJ51YCAb74oOhSzmoNq1tlTA89aMzr3vph/fvXjiYx3xu5m4NEjPt0ihNTBrtNe1HW+yvUI2WiegCGGmxLCFAcPM9uuV6Agom5B6M13rzm81TClZUYH0TUGxZFWog4YOxv+vpxPyWjhxIkaAAYmUv77UNQxaQduCWhOlemZgsBGIKuBA+FwToROmp0RzzyMCNOO3E+qCsFXMHWlVxMQ8C+Q=
+    file: build/emgen
+    skip_cleanup: true
+    draft: true
+
