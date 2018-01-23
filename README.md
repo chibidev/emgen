@@ -1,5 +1,6 @@
 # emgen
 
+[![Build Status](https://travis-ci.org/chibidev/emgen.svg?branch=master)](https://travis-ci.org/chibidev/emgen)
 A command-line tool to generate emscripten bindings to your classes based on foonathan's excellent [cppast](https://github.com/foonathan/cppast) library
 
 ## Usage
