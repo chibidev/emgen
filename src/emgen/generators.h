@@ -56,7 +56,7 @@ namespace emgen {
             auto&& wrapper_name = class_name + "_wrapper";
 
             if (is_polymorphic) {
-                std::cout << "  struct " << wrapper_name << " : public em::wrapper<" << prefix << class_name << "> {" << std::endl;
+                std::cout << "  struct " << wrapper_name << " : public emscripten::wrapper<" << prefix << class_name << "> {" << std::endl;
                 std::cout << "      EMSCRIPTEN_WRAPPER(" << wrapper_name << ");" << std::endl;
 
                 auto&& virtual_methods = public_methods.where(&cppast::is_pure_method);
@@ -112,7 +112,7 @@ namespace emgen {
                     auto&& method_name = method.name();
                     if (cppast::is_virtual(method.virtual_info())) {
                         if (cppast::is_pure(method.virtual_info())) {
-                            std::cout << "    .function(\"" << method_name << "\", &" << prefix << class_name << "::" << method_name << ", em::pure_virtual())" << std::endl;
+                            std::cout << "    .function(\"" << method_name << "\", &" << prefix << class_name << "::" << method_name << ", emscripten::pure_virtual())" << std::endl;
                         } else {
                             auto&& params = emgen::parameter_signatures(method.parameters());
                             auto&& param_names = emgen::names(method.parameters());
@@ -135,7 +135,7 @@ namespace emgen {
 
                 ranges::for_each(public_members, [&](auto&& member) {
                     auto&& member_name = member.name();
-                    std::cout << "    .field(\"" << member_name << "\", &" << prefix << class_name << "::" << member_name << ")" << std::endl;
+                    std::cout << "    .property(\"" << member_name << "\", &" << prefix << class_name << "::" << member_name << ")" << std::endl;
                 });
             }
 

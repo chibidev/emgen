@@ -6,7 +6,10 @@
 //  Copyright © 2018. Zsolt Erhardt. All rights reserved.
 //
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wassume"
 #include <cppast/libclang_parser.hpp>
+#pragma clang diagnostic pop
 #include <cxxopts.hpp>
 
 #include "emgen/generators.h"
@@ -16,7 +19,7 @@ using namespace std::literals;
 namespace program {
     static constexpr const char* const name = "emgen";
     static constexpr const char* const description = "An emscripten binding generator.";
-    static constexpr const char* const version = "0.0.1";
+    static constexpr const char* const version = "0.0.2";
 }
 
 int main(int argc, char* argv[]) {

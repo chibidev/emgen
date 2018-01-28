@@ -1,4 +1,5 @@
 language: cpp
+if: tag IS blank
 matrix:
     include:
         - os: osx
@@ -19,6 +20,10 @@ script:
     - cmake -D LLVM_VERSION_EXPLICIT=`clang -v 2>&1 | grep version | cut -d ' ' -f 4` -D LIBCLANG_INCLUDE_DIR=`$LLVM_CONFIG --includedir` -D LIBCLANG_LIBRARY=/Applications/Xcode.app/Contents/Frameworks/libclang.dylib -D CLANG_BINARY=/usr/bin/clang -D LIBCLANG_SYSTEM_INCLUDE_DIR=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk -D CMAKE_BUILD_TYPE=Release ..
     - cmake --build . --target emgen
 
+before_deploy:
+    - cd $TRAVIS_BUILD_DIR
+    - export RELEASE_TAG=v`cat src/main.cpp | grep version | grep static | cut -d '"' -f 2`
+
 deploy:
     provider: releases
     api_key:
@@ -26,4 +31,9 @@ deploy:
     file: $TRAVIS_BUILD_DIR/build/emgen
     skip_cleanup: true
     draft: true
+    tag_name: $RELEASE_TAG
+    name: emgen macOS $RELEASE_TAG
+    on:
+        repo: chibidev/emgen
+        branch: master
 
