@@ -8,10 +8,11 @@
 
 #pragma once
 
+#include <functional>
+
 #include "linq.h"
 #include "../cppast/extensions.h"
 #include "../utilities/string.h"
-#include "../utilities/functional.h"
 
 #include "helpers.h"
 
@@ -42,95 +43,103 @@ namespace emgen {
         ranges::for_each(exported_classes, [&](auto&& cl) {
             auto&& class_name = cl.name();
 
-            generate_enums(cl, prefix + class_name + "::");
-            generate_classes(cl, smart_pointer_type, prefix + class_name + "::");
-
-            auto&& bases = emgen::typenames(linq::query(cl.bases()));
-
-            auto&& public_methods = cppast::methods(cl).where([](auto&& method) {
-                // TODO
-                return true;
-            });
-
-            bool is_polymorphic = cppast::is_class_polymorphic(cl);
-            auto&& wrapper_name = class_name + "_wrapper";
-
-            if (is_polymorphic) {
-                std::cout << "  struct " << wrapper_name << " : public emscripten::wrapper<" << prefix << class_name << "> {" << std::endl;
-                std::cout << "      EMSCRIPTEN_WRAPPER(" << wrapper_name << ");" << std::endl;
-
-                auto&& virtual_methods = public_methods.where(&cppast::is_pure_method);
-                auto&& non_abstract_virtual_methods = virtual_methods.where(utilities::functional::negate(&cppast::is_pure_method));
-
-                ranges::for_each(non_abstract_virtual_methods, [](auto&& method) {
-                    auto&& params = emgen::parameter_signatures(method.parameters());
-                    auto&& param_names = emgen::names(method.parameters());
-
-                    std::cout << "      " << cppast::to_string(method.return_type()) << " " << method.name() << "(" << utilities::string::join_with(params, ", ") << ") {" << std::endl;
-                    std::cout << "          return call<" << cppast::to_string(method.return_type()) << ">(\"" << method.name() << "\"" << utilities::string::prefix_with(param_names, ", ") << ");" << std::endl;
-                    std::cout << "      }" << std::endl;
-                });
-
-                auto&& pure_virtual_methods = virtual_methods.where(&cppast::is_pure_method);
-
-                ranges::for_each(pure_virtual_methods, [](auto&& method) {
-                    auto&& params = emgen::parameter_signatures(method.parameters());
-                    auto&& param_names = emgen::names(method.parameters());
-
-                    std::cout << "      " << cppast::to_string(method.return_type()) << " " << method.name() << "(" << utilities::string::join_with(params, ", ") << ") {" << std::endl;
-                    std::cout << "          return call<" << cppast::to_string(method.return_type()) << ">(\"" << method.name() << "\"" << utilities::string::prefix_with(param_names, ", ") << ");" << std::endl;
-                    std::cout << "      }" << std::endl;
-                });
-
-                std::cout << "  };" << std::endl;
-            }
-
-            /* HEADER */{
-                std::cout << "  class_<" << prefix << class_name << utilities::string::prefix_with(bases, ", ") << ">(\"" << class_name << "\")" << std::endl;
-                if (is_polymorphic)
-                    std::cout << "    .allow_subclass<" << wrapper_name << ">(\"" << wrapper_name << "\")" << std::endl;
-
-
-                bool generate_smart_pointer = !smart_pointer_type.empty();
-                if (generate_smart_pointer)
-                    std::cout << "    .smart_ptr<" << smart_pointer_type << "<" << prefix << class_name << ">>()" << std::endl;
+            {
+                // Recursing into subdeclarations so that subtypes also get generated
+                generate_enums(cl, prefix + class_name + "::");
+                generate_classes(cl, smart_pointer_type, prefix + class_name + "::");
             }
 
             {
-                auto&& public_constructors = cppast::constructors(cl).where([](auto&& method) {
-                    // TODO
-                    return true;
+                auto&& public_methods = cppast::methods(cl).where([](auto&& method) {
+                    return cppast::is_public(method);
                 });
-                ranges::for_each(public_constructors, [&](auto&& constructor) {
-                    auto&& param_types = emgen::typenames(linq::query(constructor.parameters()));
-                    std::cout << "    .constructor(" << utilities::string::join_with(param_types, ", ") << ")" << std::endl;
-                });
-            }
 
-            {
-                ranges::for_each(public_methods, [&](auto&& method) {
-                    auto&& method_name = method.name();
-                    if (cppast::is_virtual(method.virtual_info())) {
-                        if (cppast::is_pure(method.virtual_info())) {
-                            std::cout << "    .function(\"" << method_name << "\", &" << prefix << class_name << "::" << method_name << ", emscripten::pure_virtual())" << std::endl;
-                        } else {
+                {
+                    // Generate wrappers for virtual and pure virtual functions
+                    bool is_polymorphic = cppast::is_class_polymorphic(cl);
+                    auto&& wrapper_name = class_name + "_wrapper";
+
+                    if (is_polymorphic) {
+                        std::cout << "  struct " << wrapper_name << " : public emscripten::wrapper<" << prefix << class_name << "> {" << std::endl;
+                        std::cout << "      EMSCRIPTEN_WRAPPER(" << wrapper_name << ");" << std::endl;
+
+                        auto&& virtual_methods = public_methods.where(&cppast::is_pure_method);
+                        auto&& non_abstract_virtual_methods = virtual_methods.where(std::not_fn(&cppast::is_pure_method));
+
+                        ranges::for_each(non_abstract_virtual_methods, [](auto&& method) {
                             auto&& params = emgen::parameter_signatures(method.parameters());
                             auto&& param_names = emgen::names(method.parameters());
 
-                            std::cout << "    .function(\"" << method_name << "\", optional_override([](" << prefix << class_name << "& self" << utilities::string::prefix_with(params, ", ") << ") {" << std::endl;
-                            std::cout << "        return self." << prefix << class_name << "::" << method_name << "(" << utilities::string::join_with(param_names, ", ") << ");" << std::endl;
-                            std::cout << "    }))" << std::endl;
-                        }
-                    } else {
-                        std::cout << "    .function(\"" << method_name << "\", &" << prefix << class_name << "::" << method_name << ")" << std::endl;
+                            std::cout << "      " << cppast::to_string(method.return_type()) << " " << method.name() << "(" << utilities::string::join_with(params, ", ") << ") {" << std::endl;
+                            std::cout << "          return call<" << cppast::to_string(method.return_type()) << ">(\"" << method.name() << "\"" << utilities::string::prefix_with(param_names, ", ") << ");" << std::endl;
+                            std::cout << "      }" << std::endl;
+                        });
+
+                        auto&& pure_virtual_methods = virtual_methods.where(&cppast::is_pure_method);
+
+                        ranges::for_each(pure_virtual_methods, [](auto&& method) {
+                            auto&& params = emgen::parameter_signatures(method.parameters());
+                            auto&& param_names = emgen::names(method.parameters());
+
+                            std::cout << "      " << cppast::to_string(method.return_type()) << " " << method.name() << "(" << utilities::string::join_with(params, ", ") << ") {" << std::endl;
+                            std::cout << "          return call<" << cppast::to_string(method.return_type()) << ">(\"" << method.name() << "\"" << utilities::string::prefix_with(param_names, ", ") << ");" << std::endl;
+                            std::cout << "      }" << std::endl;
+                        });
+
+                        std::cout << "  };" << std::endl;
                     }
-                });
+
+                    {
+                        // Generate class declaration
+                        auto&& bases = emgen::typenames(linq::query(cl.bases()));
+                        std::cout << "  class_<" << prefix << class_name << utilities::string::prefix_with(bases, ", ") << ">(\"" << class_name << "\")" << std::endl;
+                        if (is_polymorphic)
+                            std::cout << "    .allow_subclass<" << wrapper_name << ">(\"" << wrapper_name << "\")" << std::endl;
+
+
+                        bool generate_smart_pointer = !smart_pointer_type.empty();
+                        if (generate_smart_pointer)
+                            std::cout << "    .smart_ptr<" << smart_pointer_type << "<" << prefix << class_name << ">>()" << std::endl;
+                    }
+                }
+
+                {
+                    // Generate all the constructors
+                    auto&& public_constructors = cppast::constructors(cl).where([](auto&& method) {
+                        return cppast::is_public(method);
+                    });
+                    ranges::for_each(public_constructors, [&](auto&& constructor) {
+                        auto&& param_types = emgen::typenames(linq::query(constructor.parameters()));
+                        std::cout << "    .constructor(" << utilities::string::join_with(param_types, ", ") << ")" << std::endl;
+                    });
+                }
+
+                {
+                    // Generate methods
+                    ranges::for_each(public_methods, [&](auto&& method) {
+                        auto&& method_name = method.name();
+                        if (cppast::is_virtual(method.virtual_info())) {
+                            if (cppast::is_pure(method.virtual_info())) {
+                                std::cout << "    .function(\"" << method_name << "\", &" << prefix << class_name << "::" << method_name << ", emscripten::pure_virtual())" << std::endl;
+                            } else {
+                                auto&& params = emgen::parameter_signatures(method.parameters());
+                                auto&& param_names = emgen::names(method.parameters());
+
+                                std::cout << "    .function(\"" << method_name << "\", optional_override([](" << prefix << class_name << "& self" << utilities::string::prefix_with(params, ", ") << ") {" << std::endl;
+                                std::cout << "        return self." << prefix << class_name << "::" << method_name << "(" << utilities::string::join_with(param_names, ", ") << ");" << std::endl;
+                                std::cout << "    }))" << std::endl;
+                            }
+                        } else {
+                            std::cout << "    .function(\"" << method_name << "\", &" << prefix << class_name << "::" << method_name << ")" << std::endl;
+                        }
+                    });
+                }
             }
 
             {
+                // Generate members
                 auto&& public_members = cppast::members(cl).where([](auto&& member) {
-                    // TODO
-                    return true;
+                    return cppast::is_public(member);
                 });
 
                 ranges::for_each(public_members, [&](auto&& member) {
@@ -140,6 +149,7 @@ namespace emgen {
             }
 
             {
+                // Generate class functions
                 auto&& functions = cppast::functions(cl);
                 ranges::for_each(functions, [&](auto&& function) {
                     auto&& function_name = function.name();
@@ -147,7 +157,8 @@ namespace emgen {
                 });
             }
 
-            /* FOOTER */{
+            {
+                // Close the declaration
                 std::cout << "  ;" << std::endl;
             }
         });

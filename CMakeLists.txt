@@ -21,10 +21,9 @@ add_executable(emgen
     src/linq.h
     src/main.cpp
     src/ranges.h
-    src/utilities/functional.h
     src/utilities/string.h
 )
 target_include_directories(emgen PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_compile_options(emgen PRIVATE -std=c++14)
+target_compile_options(emgen PRIVATE -std=c++1z)
 target_link_libraries(emgen PRIVATE cppast cxxopts)
 

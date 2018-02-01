@@ -19,7 +19,7 @@ using namespace std::literals;
 namespace program {
     static constexpr const char* const name = "emgen";
     static constexpr const char* const description = "An emscripten binding generator.";
-    static constexpr const char* const version = "0.0.2";
+    static constexpr const char* const version = "0.0.3";
 }
 
 int main(int argc, char* argv[]) {

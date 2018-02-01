@@ -30,7 +30,7 @@ deploy:
         secure: biPSBrhjo3KES7BU9HcHm0sXc74nCoqhKR7eixNIrXdKaRr6GJHZxBd405KHVIgNKoAFbtOOsZpfU+vpnMdGa2wZIlaRdwioYdl9yUMITlWaOsdsMxmc/xV9iQaNlCIiOekxni7L6CXlKGgF6Hbg5rNPZviqhbDHxG1smCLYaXVR2mKJkYq/Scj17adn8h5GoLJQ+Vog0lrqvrUWUFt5fKwXan8iep4RoakIWnuxSZOmD1wfOCNN7v/4BsL4n6sk2rkOPtaULibzAirwOQL0kVJLFpnMiAyuHqs5f987JEHWyuEVR+H19g+3ZRuKa+fSMcsJA0wy50vesYrfQKTbHfEBnHVMXilbWxI6/g+hw6sMx0shUKpSIfbG2cqM/ussIeu/FlbTYz1P558bXPrucpehBRw2FSX1yLmS1T0dWxbI5IqVb7EBQxrQ5MpO0jKh5PNSQoev8NWjg1hxR7HweJ51YCAb74oOhSzmoNq1tlTA89aMzr3vph/fvXjiYx3xu5m4NEjPt0ihNTBrtNe1HW+yvUI2WiegCGGmxLCFAcPM9uuV6Agom5B6M13rzm81TClZUYH0TUGxZFWog4YOxv+vpxPyWjhxIkaAAYmUv77UNQxaQduCWhOlemZgsBGIKuBA+FwToROmp0RzzyMCNOO3E+qCsFXMHWlVxMQ8C+Q=
     file: $TRAVIS_BUILD_DIR/build/emgen
     skip_cleanup: true
-    draft: true
+    draft: false
     tag_name: $RELEASE_TAG
     name: emgen macOS $RELEASE_TAG
     on:

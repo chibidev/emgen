@@ -79,4 +79,9 @@ namespace cppast {
 
         return false;
     }
+
+    template<typename T>
+    bool is_public(T&& t) {
+        return t.access_specifier() == cppast::cpp_access_specifier_kind::cpp_public;
+    }
 }
